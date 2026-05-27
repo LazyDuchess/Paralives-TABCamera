@@ -12,14 +12,14 @@ namespace TABCamera.Plugin.Patches
     [HarmonyPatch(typeof(UpdateFreeCamera))]
     internal static class UpdateFreeCameraPatch
     {
-        private static float Speed = 2f;
+        private static float Speed = 1.6f;
         private static float SpeedMultiplier = 4f;
-        private static float Sensitivity = 0.1f;
+        private static float Sensitivity = 0.07f;
 
         private static float MinFov = 2f;
         private static float MaxFov = 170f;
 
-        private static float FovSensitivity = 0.5f;
+        private static float FovSensitivity = 0.35f;
 
         private static bool _fpsMode = true;
 
