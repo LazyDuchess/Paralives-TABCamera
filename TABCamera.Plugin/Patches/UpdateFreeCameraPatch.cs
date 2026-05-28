@@ -23,11 +23,11 @@ namespace TABCamera.Plugin.Patches
 
         private static bool _fpsMode = true;
 
+        private static Vector3 _oldTargetPos;
+        private static Quaternion _oldTargetRot;
+
         private static Vector3 _oldCamPos;
         private static Quaternion _oldCamRot;
-
-        private static Vector3 _oldLookPos;
-        private static Quaternion _oldLookRot;
 
         private static bool _wasPhotoMode = false;
 
@@ -48,8 +48,8 @@ namespace TABCamera.Plugin.Patches
             if (Keyboard.current.f8Key.wasPressedThisFrame) _forced = !_forced;
 
             var hybridPlayer = PlayerManager.Instance.GetHybridPlayer(player.PlayerIndex);
+            var targetTf = hybridPlayer.HybridCamera.FreeCamera.LookTarget;
             var camTf = hybridPlayer.HybridCamera.FreeCamera.CameraTransform;
-            var lookTf = hybridPlayer.HybridCamera.FreeCamera.LookTarget;
 
             if (player.State == GameStates.Photo)
                 _forced = false;
@@ -58,17 +58,17 @@ namespace TABCamera.Plugin.Patches
             {
                 if (_wasPhotoMode)
                 {
+                    targetTf.position = _oldTargetPos;
+                    targetTf.rotation = _oldTargetRot;
                     camTf.position = _oldCamPos;
                     camTf.rotation = _oldCamRot;
-                    lookTf.position = _oldLookPos;
-                    lookTf.rotation = _oldLookRot;
                     _wasPhotoMode = false;
                 }
+                _oldTargetPos = targetTf.position;
+                _oldTargetRot = targetTf.rotation;
+
                 _oldCamPos = camTf.position;
                 _oldCamRot = camTf.rotation;
-
-                _oldLookPos = lookTf.position;
-                _oldLookRot = lookTf.rotation;
                 _fpsMode = true;
                 return true;
             }
@@ -111,12 +111,12 @@ namespace TABCamera.Plugin.Patches
             flatRight.y = 0f;
             flatRight = flatRight.normalized;
 
-            lookTf.position += flatForward * input2d.y * currentSpeed * Time.unscaledDeltaTime;
-            lookTf.position += flatRight * input2d.x * currentSpeed * Time.unscaledDeltaTime;
+            camTf.position += flatForward * input2d.y * currentSpeed * Time.unscaledDeltaTime;
+            camTf.position += flatRight * input2d.x * currentSpeed * Time.unscaledDeltaTime;
 
             var heightInput = (Keyboard.current.eKey.isPressed ? 1f : 0f) - (Keyboard.current.qKey.isPressed ? 1f : 0f);
 
-            lookTf.position += Vector3.up * heightInput * currentSpeed * Time.unscaledDeltaTime;
+            camTf.position += Vector3.up * heightInput * currentSpeed * Time.unscaledDeltaTime;
 
             if (_fpsMode)
             {
@@ -143,7 +143,7 @@ namespace TABCamera.Plugin.Patches
                 }
             }
 
-            camTf.position = lookTf.position;
+            targetTf.position = camTf.position + camTf.forward;
 
             return false;
         }
