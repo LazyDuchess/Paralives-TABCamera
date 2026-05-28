@@ -31,20 +31,27 @@ namespace TABCamera.Plugin.Patches
 
         private static bool _wasPhotoMode = false;
 
+        private static bool _forced = false;
+
         public static bool IsFPSMode(Player player)
         {
-            return _fpsMode && player.State == GameStates.Photo;
+            return _fpsMode && (player.State == GameStates.Photo || _forced);
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(nameof(UpdateFreeCamera.UpdateForPlayer))]
         private static bool UpdateForPlayer_Prefix(Player player, UpdateFreeCamera __instance)
         {
+            if (Keyboard.current.f8Key.wasPressedThisFrame) _forced = !_forced;
+
             var hybridPlayer = PlayerManager.Instance.GetHybridPlayer(player.PlayerIndex);
             var camTf = hybridPlayer.HybridCamera.FreeCamera.CameraTransform;
             var lookTf = hybridPlayer.HybridCamera.FreeCamera.LookTarget;
 
-            if (player.State != GameStates.Photo)
+            if (player.State == GameStates.Photo)
+                _forced = false;
+
+            if (player.State != GameStates.Photo && !_forced)
             {
                 if (_wasPhotoMode)
                 {
@@ -65,7 +72,7 @@ namespace TABCamera.Plugin.Patches
 
             _wasPhotoMode = true;
 
-            if (Keyboard.current.tabKey.wasPressedThisFrame) _fpsMode = !_fpsMode;
+            if (Keyboard.current.leftAltKey.wasPressedThisFrame) _fpsMode = !_fpsMode;
 
             if (!_fpsMode)
             {
