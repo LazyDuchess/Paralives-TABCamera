@@ -33,6 +33,9 @@ namespace TABCamera.Plugin.Patches
 
         private static bool _forced = false;
 
+        private static float _yaw = 0f;
+        private static float _pitch = 0f;
+
         public static bool IsFPSMode(Player player)
         {
             return _fpsMode && (player.State == GameStates.Photo || _forced);
@@ -68,6 +71,17 @@ namespace TABCamera.Plugin.Patches
                 _oldLookRot = lookTf.rotation;
                 _fpsMode = true;
                 return true;
+            }
+
+            if (!_wasPhotoMode)
+            {
+                var eulerRot = camTf.transform.eulerAngles;
+
+                _yaw = eulerRot.y;
+                _pitch = eulerRot.x;
+
+                if (_pitch > 180f)
+                    _pitch -= 360f;
             }
 
             _wasPhotoMode = true;
@@ -120,8 +134,12 @@ namespace TABCamera.Plugin.Patches
                 }
                 else
                 {
-                    camTf.Rotate(Vector3.up * delta.x * Sensitivity, Space.World);
-                    camTf.Rotate(Vector3.right * -delta.y * Sensitivity, Space.Self);
+                    _yaw += delta.x * Sensitivity;
+                    _pitch -= delta.y * Sensitivity;
+
+                    _pitch = Mathf.Clamp(_pitch, -89f, 89f);
+
+                    camTf.rotation = Quaternion.Euler(_pitch, _yaw, 0f);
                 }
             }
 
